@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# register commit handler
+[ -f /etc/config/ucitrack ] && \
+[ "$(uci get ucitrack.@netem[0] 2>/dev/null)" != "netem-control" ] && \
+uci batch <<-EOF >/dev/null 2>/dev/null
+   add ucitrack netem
+   set ucitrack.@netem[-1].init=netem-control
+   commit ucitrack
+EOF
+
+exit 0

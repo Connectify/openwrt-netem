@@ -1,0 +1,44 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2012 Connectify
+# Copyright (C) 2006-2010 OpenWrt.org
+# Copyright (C) 2006 Carlos Sobrinho
+
+NAME=netem-control
+START=98
+STOP=98
+
+netem_load_modules()
+{
+    insmod /lib/modules/`uname -r`/sch_htb.ko &> /dev/null
+    insmod /lib/modules/`uname -r`/sch_netem.ko &> /dev/null
+}
+
+netem_unload_modules()
+{
+    rmmod sch_htb &> /dev/null
+    rmmod sch_netem &> /dev/null
+}
+
+start()
+{
+    netem_load_modules
+    /sbin/netem-control load
+}
+
+restart()
+{
+    netem_load_modules
+    /sbin/netem-control reload
+}
+
+reload()
+{
+    netem_load_modules
+    /sbin/netem-control reload
+}
+
+stop()
+{
+    /sbin/netem-control unload
+    netem_unload_modules
+}
