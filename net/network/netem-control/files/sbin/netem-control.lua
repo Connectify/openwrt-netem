@@ -10,6 +10,8 @@ You may obtain a copy of the License at
 --]]
 
 require("uci")
+local signal = require("posix.signal")
+intfcfg = {}
 
 function exec (cmd)
     print (cmd)
@@ -21,27 +23,36 @@ function setRules (operation)
     local qdisc_parent = 0
     local errors = 0
 
+    if ( operation == "del") then
+        --remove all rules associated to previously added interfaces
+        for k,v in ipairs(intfcfg) do
+            tc_str = "tc qdisc del dev "..v.." root"
+            exec(tc_str)
+        end
+        table.remove(intfcfg)
+        return
+    end
+
     x:foreach("netem", "interface",
     function (section)
+
         iface = x:get("netem", section[".name"], "ifname")
         if iface == nil then
             return
         end
+
         enabled = x:get("netem", section[".name"], "enabled")
         if enabled == "1" then
             qdisc_parent = qdisc_parent + 1
+            --keep track of all interfaces where we are adding rules
+            table.insert(intfcfg, iface)
 
-            if (operation == "add" or operation == "del") then
-                tc_str = "tc qdisc del dev "..iface.." root"
-                exec(tc_str)
+            if (operation == "add") then
+                --tc_str = "tc qdisc del dev "..iface.." root"
+                --exec(tc_str)
                 tc_str = "tc qdisc replace dev "..iface.." handle "..qdisc_parent..
                          ": root htb default 11"
                 exec(tc_str)
-            end
-
-            -- the root was blown away, nothing more to unload...
-            if operation == "del" then
-                return
             end
 
             tc_str = "tc class "..operation.." dev "..iface.." parent "..
@@ -157,44 +168,33 @@ function setRules (operation)
             return 0
         else
             -- blow away the root in case this was enabled, and isn't anymore
-            tc_str = "tc qdisc del dev "..iface.." root"
-            exec(tc_str)
+            --tc_str = "tc qdisc del dev "..iface.." root"
+            --exec(tc_str)
         end
     end)
     return errors
 end
 
 
-function load ()
-    print ("  Loading WAN Emulation rules...")
-    setRules("add")
-end
 
-function reload ()
-    print ("  Reloading WAN Emulation rules...")
-    err = setRules("change")
-    -- if there's an error on reload, unload and load
-    if err ~= 0 then
-        unload()
-        load()
-    end
-end
-
-function unload ()
-    print ("  Unloading WAN Emulation rules...")
+signal.signal(signal.SIGTERM, function(signum)
+    io.write("\n")
+    print ("Unloading WAN Emulation rules...")
     setRules("del")
+
+    os.exit(128 + signum)
+end)
+
+print("Loading WAN Emulation rules...")
+setRules("add")
+
+--endless loop to keep the service running
+
+while( true )
+do
+    -- use os sleep to wait and block with low cpu
+    os.execute("sleep 1")
+
 end
 
-
--- Main execution begins here
-if arg[1] == "load" then
-    load()
-    return
-elseif arg[1] == "reload" then
-    reload()
-    return
-elseif arg[1] == "unload" then
-    unload()
-    return
-end
-
+return

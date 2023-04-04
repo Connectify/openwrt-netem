@@ -27,7 +27,7 @@ ifname = s:option(Value, "ifname", translate("Interface"),
                   translate("These rules will apply to OUTGOING traffic on this physical interface."))
 ifname.template = "cbi/network_ifacelist"
 ifname.widget = "radio"
-ifname.nobridges = true
+ifname.nobridges = false
 ifname.rmempty = false
 ifname.network = arg[1]
 
@@ -38,7 +38,7 @@ s:option(Flag, "delay", translate("Packet Delay"), translate("Add a delay to all
 delay_ms = s:option(Value, "delay_ms", translate("Delay (ms)"), translate("The base amount of fixed delay to be added to every ougoing packet."))
 delay_ms:depends({delay="1"})
 delay_ms.datatype = "uinteger"
-delay_var = s:option(Value, "delay_var", translate("Delay +/- Variation (ms)"), translate("The amount of variation that can be added or removed from the base fixed delay."))
+delay_var = s:option(Value, "delay_var", translate("Delay +/- Variation (ms)"), translate("The amount of variation(jitter) that can be added or removed from the base fixed delay."))
 delay_var:depends({delay="1"})
 delay_var.datatype = "uinteger"
 delay_corr = s:option(Value, "delay_corr", translate("Delay Correlation (%)"), translate("Probability that the variation will be the same as that of the previous packet."))
