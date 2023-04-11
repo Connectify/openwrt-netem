@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=netem-control
-PKG_VERSION:=0.1
+PKG_VERSION:=0.2
 PKG_RELEASE:=1
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
@@ -20,7 +20,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/netem-control
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+kmod-netem +kmod-sched +lua +tc
+  DEPENDS:=+kmod-netem +kmod-sched +lua +tc +luaposix +libuci-lua +luci-compat
   TITLE:=WAN emulation with netem.
 endef
 
@@ -40,8 +40,6 @@ define Package/netem-control/install
 
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/netem.init $(1)/etc/init.d/netem-control
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/netem.uci $(1)/etc/uci-defaults/netem
 endef
 
 define Package/netem-control/postinst
@@ -50,9 +48,17 @@ define Package/netem-control/postinst
 # do not change below
 # check if we are on real system
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	. $${IPKG_INSTROOT}/etc/uci-defaults/netem
-	rm -f $${IPKG_INSTROOT}/etc/uci-defaults/netem
+	/etc/init.d/netem-control enable
 fi
+endef
+
+define Package/netem-control/prerm
+#!/bin/sh
+# check if we are on real system
+if [ -z "$${IPKG_INSTROOT}" ]; then
+    /etc/init.d/netem-control disable
+fi
+exit 0
 endef
 
 $(eval $(call BuildPackage,netem-control))
