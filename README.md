@@ -3,7 +3,7 @@ openwrt-netem
 
 OpenWrt packages for easy WAN emulation.
 
-### Compiling the packages require the followinfg steps:
+### Compiling the packages require the following steps:
 1. Setup an OpenWrt buildroot, checkout the openwrt repo. Refer to https://openwrt.org/docs/guide-developer/toolchain/use-buildsystem
 2. Copy these folders into the my_packages folder of the openwrt buildroot and update the feeds. 
 ```
